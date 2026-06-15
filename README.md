@@ -1,6 +1,6 @@
 # Estimativa da Densidade de Potência Eólica a partir de Dados do INMET
 
-Este projeto é desenvolvido com a finalidade de compor a nota da disciplina de Cálculo Diferencial e Integral 2 no curso de Engenharia Civil da Universidade Federal de Alagoas; com inteção de protagozinar uma atividade extracurricular.
+Este projeto é desenvolvido com a finalidade de compor nota ma disciplina de Cálculo Diferencial e Integral 2 no curso de Engenharia Civil da Universidade Federal de Alagoas; com inteção de protagozinar uma atividade extracurricular.
 
 ## Objetivo
 
@@ -38,7 +38,7 @@ dados/processed/ ────────── Dados prontos para análise
 
 ```
 ├── dados/
-│   ├── raw/              # CSVs originais do INMET
+│   ├── raw/              # CSVs zipados originais do INMET
 │   └── processed/        # Dados limpos e organizados
 ├── src/
 │   ├── download_inmet.py     # Download, limpeza e organização dos dados
