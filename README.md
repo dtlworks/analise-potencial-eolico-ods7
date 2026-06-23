@@ -1,10 +1,10 @@
 # Estimativa da Densidade de Potência Eólica a partir de Dados do INMET
 
-Este projeto é desenvolvido com a finalidade de compor nota ma disciplina de Cálculo Diferencial e Integral 2 no curso de Engenharia Civil da Universidade Federal de Alagoas; com inteção de protagozinar uma atividade extracurricular.
+Este projeto é desenvolvido com a finalidade de compor nota na disciplina de Cálculo Diferencial e Integral 2 no curso de Engenharia Civil da Universidade Federal de Alagoas; com inteção de protagozinar uma atividade extracurricular.
 
 ## Objetivo
 
-Utilizar dados públicos de velocidade e direção do vento fornecidos pelo **INMET** (Instituto Nacional de Meteorologia) para estimar o potencial eólico de uma região, aplicando conceitos de cálculo integral (soma de Riemann, regra do trapézio, regra de Simpson) e séries de Taylor.
+Utilizar dados públicos de velocidade e direção do vento fornecidos pelo **INMET** (Instituto Nacional de Meteorologia) para estimar o potencial eólico de uma região, aplicando conceitos de cálculo integral (soma de Riemann, regra do trapézio e regra de Simpson) e séries de Taylor.
 
 ## Fluxo do Projeto
 
@@ -18,7 +18,7 @@ INMET (BDMEP)
 dados/raw/ ───────────────── Dados brutos (originais)
     │
     ▼
-dados/processed/ ────────── Dados prontos para análise
+dados/processed/ ────────── Dados prontos para análise e imagens gráficas geradas
     │
     ├──► [src/calculo_densidade.py] ──► Densidade de potência (P/A)
     │         ├──► Soma de Riemann
@@ -38,13 +38,13 @@ dados/processed/ ────────── Dados prontos para análise
 
 Ao executar a pipeline com `salvar=True`, as seguintes imagens são salvas em `dados/processed/`:
 
-| Arquivo | Descrição |
-|---|---|
-| `histograma_weibull.png` | Histograma das velocidades com ajuste Weibull |
-| `serie_temporal.png` | Série temporal da velocidade do vento |
+| Arquivo                     |                       Descrição                                     |
+|-----------------------------|---------------------------------------------------------------------|
+| `histograma_weibull.png`    | Histograma das velocidades com ajuste Weibull                       |
+| `serie_temporal.png`        | Série temporal da velocidade do vento                               |
 | `comparacao_integracao.png` | Comparação entre métodos de integração (Riemann, Trapézio, Simpson) |
-| `convergencia_taylor.png` | Convergência da expansão em série de Taylor |
-| `rosa_ventos.png` | Rosa dos ventos (frequência × direção) |
+| `convergencia_taylor.png`   | Convergência da expansão em série de Taylor                         |
+| `rosa_ventos.png`           | Rosa dos ventos (frequência × direção)                              |
 
 O diretório de saída padrão é definido pela constante `DIR_SAIDA` em `graficos.py`.
 
