@@ -71,3 +71,7 @@ class TestExpansaoTaylor:
     def test_erro_diminui_com_mais_termos(self):
         erros = [c["erro_relativo_pct"] for c in self.resultado["convergencia"]]
         assert erros[-1] <= erros[0]
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
