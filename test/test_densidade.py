@@ -96,3 +96,7 @@ class TestDensidadePotencia:
         resultado = calcular_densidade_potencia(self.df)
         vals = list(resultado["densidade_potencia"].values())
         assert max(vals) - min(vals) < 1.0
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
