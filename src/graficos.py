@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+from pathlib import Path
 from typing import Dict
 
 from calculo_densidade import ajustar_weibull, weibull_pdf
 from taylor_expansao import expansao_taylor
 from rosa_dos_ventos import plotar_rosa
 
-DIR_SAIDA = "dados/processed"
+DIR_SAIDA = str(Path(__file__).resolve().parent.parent / "dados" / "processed")
 
 
 def _caminho_salvar(salvar: str | None) -> str | None:
@@ -79,7 +80,7 @@ def grafico_convergencia_taylor(resultado_taylor: Dict, salvar: str = None) -> p
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.plot(n_termos, erros, "o-", color="steelblue", lw=2, markersize=6)
     ax.axhline(y=0, color="gray", ls="--", lw=1)
-    ax.set_xlabel("Nímero de termos da série de Taylor", fontsize=11)
+    ax.set_xlabel("Número de termos da série de Taylor", fontsize=11)
     ax.set_ylabel("Erro relativo (%)", fontsize=11)
     ax.set_title("Convergência da Expansão de Taylor para <v³>", fontsize=12)
     ax.set_xticks(n_termos)
@@ -104,4 +105,5 @@ def gerar_todos_graficos(df: pd.DataFrame, resultado_densidade: Dict, resultado_
     grafico_convergencia_taylor(resultado_taylor, salvar="convergencia_taylor.png" if salvar else None)
     plotar_rosa(df, salvar=_caminho_salvar("rosa_ventos.png") if salvar else None)
 
-    plt.show()
+    if not salvar:
+        plt.show()
