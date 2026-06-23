@@ -56,7 +56,7 @@ def plotar_rosa(df: pd.DataFrame, salvar: str = None) -> plt.Figure:
 
     ax.set_xticks(angulos)
     ax.set_xticklabels(rosa["nomes"], fontsize=9)
-    ax.set_title("Rosa dos Ventos - Maceio (A303)\nFrequencia (%) por Direcao", fontsize=12, pad=20)
+    ax.set_title("Rosa dos Ventos - Maceió (A303)\nFrequência (%) por Direção", fontsize=12, pad=20)
 
     sm = plt.cm.ScalarMappable(
         cmap="YlOrRd",
@@ -64,7 +64,7 @@ def plotar_rosa(df: pd.DataFrame, salvar: str = None) -> plt.Figure:
     )
     sm.set_array([])
     cbar = fig.colorbar(sm, ax=ax, pad=0.1, shrink=0.6)
-    cbar.set_label("Velocidade media (m/s)", fontsize=9)
+    cbar.set_label("Velocidade média (m/s)", fontsize=9)
 
     if salvar:
         fig.savefig(salvar, dpi=150, bbox_inches="tight")

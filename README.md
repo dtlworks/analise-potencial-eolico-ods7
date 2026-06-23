@@ -34,12 +34,26 @@ dados/processed/ ────────── Dados prontos para análise
     └──► [src/graficos.py] ─────────► Visualizações finais
 ```
 
+## Saídas Geradas
+
+Ao executar a pipeline com `salvar=True`, as seguintes imagens são salvas em `dados/processed/`:
+
+| Arquivo | Descrição |
+|---|---|
+| `histograma_weibull.png` | Histograma das velocidades com ajuste Weibull |
+| `serie_temporal.png` | Série temporal da velocidade do vento |
+| `comparacao_integracao.png` | Comparação entre métodos de integração (Riemann, Trapézio, Simpson) |
+| `convergencia_taylor.png` | Convergência da expansão em série de Taylor |
+| `rosa_ventos.png` | Rosa dos ventos (frequência × direção) |
+
+O diretório de saída padrão é definido pela constante `DIR_SAIDA` em `graficos.py`.
+
 ## Estrutura do Repositório
 
 ```
 ├── dados/
 │   ├── raw/              # CSVs zipados originais do INMET
-│   └── processed/        # Dados limpos e organizados
+│   └── processed/        # Dados limpos e imagens geradas
 ├── src/
 │   ├── download_inmet.py     # Download, limpeza e organização dos dados
 │   ├── calculo_densidade.py  # ⟨v³⟩ e P/A = ½ρ⟨v³⟩ (Riemann, Trapézio, Simpson)

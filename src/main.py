@@ -75,7 +75,7 @@ def main():
     print("=" * 55)
     print("  5. GERANDO GRAFICOS")
     print("=" * 55)
-    gerar_todos_graficos(df, resultado_densidade, resultado_taylor)
+    gerar_todos_graficos(df, resultado_densidade, resultado_taylor, salvar=True)
 
 
 if __name__ == "__main__":
