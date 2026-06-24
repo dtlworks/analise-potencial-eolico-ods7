@@ -63,11 +63,10 @@ def expansao_taylor(velocidades: np.ndarray, n_termos_max: int = 8) -> Dict:
 
 
 if __name__ == "__main__":
-    from utils import PROCESSED_DIR
+    from utils import csv_path
     import pandas as pd
 
-    csv_path = PROCESSED_DIR / "A303_2025_2026_limpo.csv"
-    df = pd.read_csv(csv_path, parse_dates=["data_hora"])
+    df = pd.read_csv(csv_path(), parse_dates=["data_hora"])
 
     velocidades = df["velocidade_vento"].dropna().values
     velocidades = velocidades[velocidades > 0]

@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from calculo_densidade import ajustar_weibull, weibull_pdf
 from taylor_expansao import expansao_taylor
@@ -12,7 +12,7 @@ from rosa_dos_ventos import plotar_rosa
 DIR_SAIDA = str(Path(__file__).resolve().parent.parent / "dados" / "processed")
 
 
-def _caminho_salvar(salvar: str | None) -> str | None:
+def _caminho_salvar(salvar: Optional[str]) -> Optional[str]:
     if salvar is None:
         return None
     if os.path.basename(salvar) == salvar:
@@ -52,26 +52,6 @@ def grafico_serie_temporal(df: pd.DataFrame, salvar: str = None) -> plt.Figure:
     return fig
 
 
-def grafico_comparacao_integracao(resultado_densidade: Dict, salvar: str = None) -> plt.Figure:
-    metodos = list(resultado_densidade["densidade_potencia"].keys())
-    valores = [resultado_densidade["densidade_potencia"][m] for m in metodos]
-    cores = ["#2ecc71", "#3498db", "#e74c3c", "#9b59b6"]
-
-    fig, ax = plt.subplots(figsize=(8, 5))
-    barras = ax.bar(metodos, valores, color=cores[:len(metodos)], edgecolor="black")
-
-    for bar, val in zip(barras, valores):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01,
-                f"{val:.4f}", ha="center", va="bottom", fontsize=10)
-
-    ax.set_ylabel("Densidade de Potência (W/m²)", fontsize=11)
-    ax.set_title("Comparação dos Métodos de Integração Numérica", fontsize=12)
-    ax.grid(axis="y", alpha=0.3)
-    if salvar:
-        fig.savefig(_caminho_salvar(salvar), dpi=150, bbox_inches="tight")
-    return fig
-
-
 def grafico_convergencia_taylor(resultado_taylor: Dict, salvar: str = None) -> plt.Figure:
     conv = resultado_taylor["convergencia"]
     n_termos = [c["n_termos"] for c in conv]
@@ -101,7 +81,6 @@ def gerar_todos_graficos(df: pd.DataFrame, resultado_densidade: Dict, resultado_
         salvar="histograma_weibull.png" if salvar else None,
     )
     grafico_serie_temporal(df, salvar="serie_temporal.png" if salvar else None)
-    grafico_comparacao_integracao(resultado_densidade, salvar="comparacao_integracao.png" if salvar else None)
     grafico_convergencia_taylor(resultado_taylor, salvar="convergencia_taylor.png" if salvar else None)
     plotar_rosa(df, salvar=_caminho_salvar("rosa_ventos.png") if salvar else None)
 

@@ -22,11 +22,10 @@ def calcular_potencia(densidade_potencia: float, R: float = 60.0) -> Dict:
 
 if __name__ == "__main__":
     from calculo_densidade import calcular_densidade_potencia
-    from utils import PROCESSED_DIR
+    from utils import csv_path
     import pandas as pd
 
-    csv_path = PROCESSED_DIR / "A303_2025_2026_limpo.csv"
-    df = pd.read_csv(csv_path, parse_dates=["data_hora"])
+    df = pd.read_csv(csv_path(), parse_dates=["data_hora"])
 
     densidade = calcular_densidade_potencia(df)
     pa = densidade["densidade_potencia"]["simpson"]
