@@ -89,22 +89,21 @@ def calcular_densidade_potencia(df: pd.DataFrame, rho: float = RHO) -> Dict:
 
 
 if __name__ == "__main__":
-    from utils import PROCESSED_DIR
+    from utils import csv_path
 
-    csv_path = PROCESSED_DIR / "A303_2025_2026_limpo.csv"
-    df = pd.read_csv(csv_path, parse_dates=["data_hora"])
+    df = pd.read_csv(csv_path(), parse_dates=["data_hora"])
 
     resultado = calcular_densidade_potencia(df)
 
     print(f"=== Ajuste de Weibull ===")
-    print(f"  k (forma)  = {resultado['k_weibull']:.4f}")
-    print(f"  c (escala) = {resultado['c_weibull']:.4f} m/s")
+    print(f"  k (forma)  = {resultado['k_weibull']:.6f}")
+    print(f"  c (escala) = {resultado['c_weibull']:.6f} m/s")
     print(f"  v_media    = {resultado['v_media_dados']:.2f} m/s")
     print()
     print(f"=== Media Cubica <v³> (m³/s³) ===")
     for metodo, val in resultado["media_cubica"].items():
-        print(f"  {metodo:<12} {val:.4f}")
+        print(f"  {metodo:<12} {val:.6f}")
     print()
     print(f"=== Densidade de Potencia P/A (W/m²) ===")
     for metodo, val in resultado["densidade_potencia"].items():
-        print(f"  {metodo:<12} {val:.4f}")
+        print(f"  {metodo:<12} {val:.6f}")

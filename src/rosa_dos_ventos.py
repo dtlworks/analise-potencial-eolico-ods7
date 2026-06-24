@@ -13,8 +13,6 @@ SETOR_NAMES = [
 
 def calcular_rosa(df: pd.DataFrame, n_setores: int = 16) -> Dict:
     angulo_setor = 360 / n_setores
-    direcoes = df["direcao_vento"].dropna().values
-    velocidades = df["velocidade_vento"].dropna().values
     idx_validos = df["direcao_vento"].notna() & df["velocidade_vento"].notna()
     direcoes = df.loc[idx_validos, "direcao_vento"].values
     velocidades = df.loc[idx_validos, "velocidade_vento"].values
@@ -72,10 +70,9 @@ def plotar_rosa(df: pd.DataFrame, salvar: str = None) -> plt.Figure:
 
 
 if __name__ == "__main__":
-    from utils import PROCESSED_DIR
+    from utils import csv_path
 
-    csv_path = PROCESSED_DIR / "A303_2025_2026_limpo.csv"
-    df = pd.read_csv(csv_path, parse_dates=["data_hora"])
+    df = pd.read_csv(csv_path(), parse_dates=["data_hora"])
 
     rosa = calcular_rosa(df)
 

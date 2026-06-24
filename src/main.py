@@ -5,7 +5,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import pandas as pd
 
-from utils import PROCESSED_DIR
+from utils import csv_path
 from calculo_densidade import calcular_densidade_potencia
 from taylor_expansao import expansao_taylor
 from potencial_total import calcular_potencia
@@ -14,9 +14,9 @@ from graficos import gerar_todos_graficos
 
 
 def main():
-    csv_path = PROCESSED_DIR / "A303_2025_2026_limpo.csv"
-    print(f"Carregando dados de: {csv_path}")
-    df = pd.read_csv(csv_path, parse_dates=["data_hora"])
+    caminho = csv_path()
+    print(f"Carregando dados de: {caminho}")
+    df = pd.read_csv(caminho, parse_dates=["data_hora"])
     print(f"  Registros: {len(df)}")
     print(f"  Periodo:   {df['data_hora'].min()} a {df['data_hora'].max()}")
     print()
@@ -25,14 +25,14 @@ def main():
     print("  1. DENSIDADE DE POTENCIA (Weibull + Integracao Numerica)")
     print("=" * 55)
     resultado_densidade = calcular_densidade_potencia(df)
-    print(f"  Weibull: k={resultado_densidade['k_weibull']:.4f}, c={resultado_densidade['c_weibull']:.4f} m/s")
+    print(f"  Weibull: k={resultado_densidade['k_weibull']:.6f}, c={resultado_densidade['c_weibull']:.6f} m/s")
     print()
     print(f"  {'Metodo':<12} {'<v^3> (m^3/s^3)':<16} {'P/A (W/m^2)':<12}")
     print(f"  {'-'*40}")
     for metodo in ["analitica", "riemann", "trapezio", "simpson"]:
         cubica = resultado_densidade["media_cubica"][metodo]
         pa = resultado_densidade["densidade_potencia"][metodo]
-        print(f"  {metodo:<12} {cubica:<16.4f} {pa:<12.4f}")
+        print(f"  {metodo:<12} {cubica:<16.6f} {pa:<12.6f}")
     print()
 
     print("=" * 55)
@@ -41,8 +41,8 @@ def main():
     velocidades = df["velocidade_vento"].dropna().values
     velocidades = velocidades[velocidades > 0]
     resultado_taylor = expansao_taylor(velocidades)
-    print(f"  v_media = {resultado_taylor['v_media']:.4f} m/s")
-    print(f"  <v^3> analitico = {resultado_taylor['v_cubica_analitica']:.4f} m^3/s^3")
+    print(f"  v_media = {resultado_taylor['v_media']:.6f} m/s")
+    print(f"  <v^3> analitico = {resultado_taylor['v_cubica_analitica']:.6f} m^3/s^3")
     print()
     print(f"  {'Termos':<8} {'Soma parcial':<16} {'Erro %':<10}")
     print(f"  {'-'*34}")
@@ -57,7 +57,7 @@ def main():
     resultado_potencia = calcular_potencia(pa_simpson)
     print(f"  Raio do rotor       = {resultado_potencia['raio_rotor_m']:.0f} m")
     print(f"  Area varrida        = {resultado_potencia['area_varrida_m2']:.2f} m²")
-    print(f"  Potencia estimada   = {resultado_potencia['potencia_mw']:.4f} MW")
+    print(f"  Potencia estimada   = {resultado_potencia['potencia_mw']:.6f} MW")
     print(f"  Nominal             = 2.20 MW")
     print(f"  Fator de capacidade = {resultado_potencia['potencia_mw']/2.2*100:.2f}%")
     print()
