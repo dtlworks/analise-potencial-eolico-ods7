@@ -1,3 +1,4 @@
+import logging
 import requests
 import zipfile
 import csv
@@ -13,27 +14,60 @@ from dateutil.relativedelta import relativedelta
 
 from utils import RAW_DIR, PROCESSED_DIR, BASE_URL, ESTACAO_PADRAO, ANOS_PADRAO
 
+logger = logging.getLogger(__name__)
+
 
 def baixar_zip(ano: int, dest_dir: Path = RAW_DIR) -> Path:
+    """Faz download do arquivo ZIP anual do INMET BDMEP.
+
+    Parameters
+    ----------
+    ano : int
+        Ano para download (ex: 2025).
+    dest_dir : Path
+        Diretório de destino (default: RAW_DIR).
+
+    Returns
+    -------
+    Path
+        Caminho para o arquivo ZIP baixado ou já existente.
+
+    Raises
+    ------
+    requests.HTTPError
+        Se o download falhar.
+    """
     url = f"{BASE_URL}/{ano}.zip"
     dest_dir.mkdir(parents = True, exist_ok = True)
     caminho = dest_dir / f"{ano}.zip"
 
     if caminho.exists():
-        print(f"[{ano}] ZIP ja existe, pulando download.")
+        logger.info("[%s] ZIP ja existe, pulando download.", ano)
         return caminho
 
-    print(f"[{ano}] Baixando {url} ...")
+    logger.info("[%s] Baixando %s ...", ano, url)
     resp = requests.get(url, timeout = 300)
     resp.raise_for_status()
     with open(caminho, "wb") as f:
         for chunk in resp.iter_content(chunk_size = 8192):
             f.write(chunk)
-    print(f"[{ano}] Salvo em {caminho}")
+    logger.info("[%s] Salvo em %s", ano, caminho)
     return caminho
 
 
 def _parse_metadata(linhas: List[str]) -> dict:
+    """Extrai metadados do cabeçalho do arquivo CSV da estação.
+
+    Parameters
+    ----------
+    linhas : list of str
+        Primeiras 8 linhas do CSV contendo metadados (chave;valor).
+
+    Returns
+    -------
+    dict
+        Dicionário com chaves normalizadas (minúsculo, sem pontuação).
+    """
     meta = {}
     for linha in linhas[:8]:
         if ";" in linha:
@@ -44,6 +78,18 @@ def _parse_metadata(linhas: List[str]) -> dict:
 
 
 def _renomear_coluna(nome: str) -> str:
+    """Normaliza nomes de colunas do INMET para o padrão do projeto.
+
+    Parameters
+    ----------
+    nome : str
+        Nome original da coluna (ex: "VENTO, VELOCIDADE HORARIA (m/s)").
+
+    Returns
+    -------
+    str
+        Nome normalizado (ex: "velocidade_vento").
+    """
     nome_lower = nome.lower()
     padroes = [
         (r"^data$", "data"),
@@ -60,13 +106,30 @@ def _renomear_coluna(nome: str) -> str:
 
 
 def extrair_estacao(caminho_zip: Path, codigo_estacao: str) -> Optional[pd.DataFrame]:
+    """Extrai dados de uma estação específica de um ZIP do INMET.
+
+    Procura arquivos CSV dentro do ZIP que contenham o código da
+    estação, faz parsing do cabeçalho e seleciona colunas relevantes.
+
+    Parameters
+    ----------
+    caminho_zip : Path
+        Caminho para o arquivo ZIP anual.
+    codigo_estacao : str
+        Código WMO da estação (ex: "A303").
+
+    Returns
+    -------
+    pd.DataFrame or None
+        DataFrame com colunas normalizadas, ou None se não encontrada.
+    """
     with zipfile.ZipFile(caminho_zip, "r") as z:
         arquivos = [f for f in z.infolist() if not f.is_dir()]
         candidatos = [a for a in arquivos if f"_{codigo_estacao}_" in a.filename]
         if not candidatos:
             candidatos = [a for a in arquivos if codigo_estacao in a.filename]
         if not candidatos:
-            print(f"  Nenhum candidato para {codigo_estacao} em {caminho_zip.name}. Abortando busca.")
+            logger.warning("Nenhum candidato para %s em %s. Abortando busca.", codigo_estacao, caminho_zip.name)
             return None
 
         for arq in candidatos:
@@ -77,7 +140,7 @@ def extrair_estacao(caminho_zip: Path, codigo_estacao: str) -> Optional[pd.DataF
             meta = _parse_metadata(linhas)
             codigo_wmo = meta.get("codigo_wmo", "").strip()
             if codigo_wmo == codigo_estacao:
-                print(f"  Estacao {codigo_estacao} encontrada em {arq.filename}")
+                logger.info("Estacao %s encontrada em %s", codigo_estacao, arq.filename)
                 dados_raw = "\n".join(linhas[8:])
                 buf = io.StringIO(dados_raw)
                 leitor = csv.reader(buf, delimiter = ";")
@@ -102,11 +165,27 @@ def extrair_estacao(caminho_zip: Path, codigo_estacao: str) -> Optional[pd.DataF
                         df[k] = meta[k]
                 return df
 
-    print(f"  Estacao {codigo_estacao} nao encontrada nos candidatos de {caminho_zip.name}")
+    logger.warning("Estacao %s nao encontrada nos candidatos de %s", codigo_estacao, caminho_zip.name)
     return None
 
 
 def limpar_dados(df: pd.DataFrame) -> pd.DataFrame:
+    """Limpa e valida o DataFrame bruto do INMET.
+
+    Etapas: converte vírgula decimal, substitui -9999 por NaN,
+    converte colunas para numérico, cria datetime, remove
+    registros sem velocidade, ordena e gera diagnóstico.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame bruto extraído do INMET.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame limpo e ordenado por data_hora.
+    """
     df = df.copy()
     total_inicial = len(df)
     diag = {}
@@ -179,9 +258,16 @@ def limpar_dados(df: pd.DataFrame) -> pd.DataFrame:
     return saida
 
 
-def imprimir_diagnostico(diag: dict):
+def imprimir_diagnostico(diag: dict) -> None:
+    """Exibe relatório formatado de diagnóstico da limpeza de dados.
+
+    Parameters
+    ----------
+    diag : dict
+        Dicionário com métricas gerado por limpar_dados().
+    """
     sep = "-" * 52
-    p = print
+    p = logger.info
 
     p(f"\n{sep}")
     p("  DIAGNOSTICO DA LIMPEZA DE DADOS")
@@ -245,10 +331,24 @@ def imprimir_diagnostico(diag: dict):
 
 
 def filtrar_ultimos_meses(df: pd.DataFrame, meses: int) -> pd.DataFrame:
+    """Filtra registros dos últimos N meses até a data atual.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame com coluna 'data_hora'.
+    meses : int
+        Número de meses para manter.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame filtrado.
+    """
     agora = datetime.now()
     data_limite = agora - relativedelta(months = meses)
     df_filtrado = df[df["data_hora"] >= data_limite].copy()
-    print(f"  Filtrado: {len(df_filtrado)} registros nos ultimos {meses} meses")
+    logger.info("Filtrado: %d registros nos ultimos %d meses", len(df_filtrado), meses)
     return df_filtrado
 
 
@@ -256,11 +356,23 @@ def main(
     estacao: str = ESTACAO_PADRAO,
     anos: Optional[List[int]] = None,
     meses: int = 12,
-):
+) -> None:
+    """Executa pipeline completa de download, limpeza e salvamento.
+
+    Parameters
+    ----------
+    estacao : str
+        Código WMO da estação (default: "A303").
+    anos : list of int, optional
+        Anos para download (default: [2025, 2026]).
+    meses : int
+        Meses recentes a manter após limpeza (default: 12).
+    """
     if anos is None:
         anos = ANOS_PADRAO
 
-    print(f"=== Download INMET - Estacao {estacao} ===")
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logger.info("=== Download INMET - Estacao %s ===", estacao)
     dfs_brutos = []
     for ano in anos:
         zip_path = baixar_zip(ano)
@@ -269,7 +381,7 @@ def main(
             dfs_brutos.append(df_estacao)
 
     if not dfs_brutos:
-        print("Nenhum dado encontrado para a estacao especificada.")
+        logger.warning("Nenhum dado encontrado para a estacao especificada.")
         return
 
     df_completo = pd.concat(dfs_brutos, ignore_index = True)
@@ -283,19 +395,20 @@ def main(
         periodo = f"{anos[0]}_{anos[-1]}"
         processed_path = PROCESSED_DIR / f"{estacao}_{periodo}_limpo.csv"
         df_filtrado.to_csv(processed_path, index = False)
-        print(f"  Limpo salvo: {processed_path} ({len(df_filtrado)} registros)")
+        logger.info("Limpo salvo: %s (%d registros)", processed_path, len(df_filtrado))
 
-        print(f"\nResumo:")
-        print(f"  Estacao:     {estacao} (Maceio-AL)")
-        print(f"  Periodo:     {df_filtrado['data_hora'].min()} a {df_filtrado['data_hora'].max()}")
-        print(f"  Registros:   {len(df_filtrado)}")
-        print(f"  Velocidade media: {df_filtrado['velocidade_vento'].mean():.2f} m/s")
+        logger.info("")
+        logger.info("Resumo:")
+        logger.info("  Estacao:     %s (Maceio-AL)", estacao)
+        logger.info("  Periodo:     %s a %s", df_filtrado['data_hora'].min(), df_filtrado['data_hora'].max())
+        logger.info("  Registros:   %d", len(df_filtrado))
+        logger.info("  Velocidade media: %.2f m/s", df_filtrado['velocidade_vento'].mean())
         if "rajada_vento" in df_filtrado.columns:
-            print(f"  Rajada maxima:   {df_filtrado['rajada_vento'].max():.2f} m/s")
+            logger.info("  Rajada maxima:   %.2f m/s", df_filtrado['rajada_vento'].max())
     else:
-        print("  Nenhum registro valido apos limpeza.")
+        logger.warning("Nenhum registro valido apos limpeza.")
         df_completo.to_csv(PROCESSED_DIR / f"{estacao}_debug_completo.csv", index=False)
-        print(f"  Debug salvo: {PROCESSED_DIR / f'{estacao}_debug_completo.csv'} ({len(df_completo)} registros)")
+        logger.warning("Debug salvo: %s (%d registros)", PROCESSED_DIR / f"{estacao}_debug_completo.csv", len(df_completo))
 
 
 if __name__ == "__main__":

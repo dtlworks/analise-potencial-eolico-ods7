@@ -1,7 +1,8 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+if __name__ == "__main__" and __package__ is None:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import pandas as pd
 
@@ -14,6 +15,16 @@ from graficos import gerar_todos_graficos
 
 
 def main():
+    """Orquestra a pipeline completa de análise de potencial eólico.
+
+    Executa em sequência:
+    1. Carrega CSV processado de dados de vento do INMET
+    2. Calcula densidade de potência (Weibull + 4 métodos de integração)
+    3. Expansão em série de Taylor de ⟨v³⟩
+    4. Potência total para turbina Vestas V120-2.2 MW
+    5. Estatísticas da rosa dos ventos
+    6. Geração e salvamento de gráficos
+    """
     caminho = csv_path()
     print(f"Carregando dados de: {caminho}")
     df = pd.read_csv(caminho, parse_dates=["data_hora"])

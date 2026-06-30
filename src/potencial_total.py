@@ -1,10 +1,28 @@
 import numpy as np
 from typing import Dict
 
-from utils import RHO
+from utils import RHO, ROTOR_RAIO
 
 
-def calcular_potencia(densidade_potencia: float, R: float = 60.0) -> Dict:
+def calcular_potencia(densidade_potencia: float, R: float = ROTOR_RAIO) -> Dict:
+    """Estima potência total de turbina eólica.
+
+    P = (P/A) * A, com A = pi * R^2.
+    Valores padrão para Vestas V120-2.2 MW (R = 60 m).
+
+    Parameters
+    ----------
+    densidade_potencia : float
+        Densidade de potência (W/m²).
+    R : float
+        Raio do rotor (m, default: 60.0).
+
+    Returns
+    -------
+    dict
+        Chaves: raio_rotor_m, area_varrida_m2, densidade_potencia_w_m2,
+                potencia_watts, potencia_kw, potencia_mw.
+    """
     area = np.pi * R ** 2
     potencia_watts = densidade_potencia * area
     potencia_kw = potencia_watts / 1_000

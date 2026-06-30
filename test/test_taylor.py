@@ -1,10 +1,6 @@
-import sys
-from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from taylor_expansao import (
     coeficientes_taylor_v3,
@@ -15,6 +11,7 @@ from taylor_expansao import (
 
 class TestCoeficientesTaylor:
     def test_expansao_exata_v3(self):
+        """Coeficientes de Taylor para v^3 são exatos até 4 termos."""
         v = 3.0
         coeffs = coeficientes_taylor_v3(v, 4)
         assert coeffs[0] == v ** 3
@@ -23,6 +20,7 @@ class TestCoeficientesTaylor:
         assert coeffs[3] == 1.0
 
     def test_reconstrucao_v3(self):
+        """Série de Taylor de 4 termos reconstrói v^3 exatamente."""
         v_media = 4.0
         coeffs = coeficientes_taylor_v3(v_media, 4)
         for v_teste in [2.0, 3.0, 4.0, 5.0, 6.0]:
@@ -32,11 +30,13 @@ class TestCoeficientesTaylor:
 
 class TestIntegracaoWeibull:
     def test_primeiro_termo_e_um(self):
+        """Momento de ordem 0 (integral da PDF) retorna 1.0."""
         k, c = 2.0, 5.0
         termos = integrar_termos_weibull(3.0, k, c, n_termos=1)
         assert abs(termos[0] - 1.0) < 0.01
 
     def test_segundo_termo_omega1(self):
+        """Momento de ordem 1 integrado confere com quad independente."""
         k, c = 2.0, 5.0
         from calculo_densidade import weibull_pdf
         from scipy.integrate import quad
@@ -49,6 +49,7 @@ class TestIntegracaoWeibull:
 
 class TestExpansaoTaylor:
     def setup_method(self):
+        """Gera dados Weibull sintéticos e executa expansao_taylor."""
         np.random.seed(42)
         k_true, c_true = 2.0, 5.0
         dados = np.random.weibull(k_true, 5000) * c_true
@@ -60,15 +61,18 @@ class TestExpansaoTaylor:
         self.resultado = expansao_taylor(velocidades)
 
     def test_retorna_chaves_esperadas(self):
+        """expansao_taylor retorna dicionário com chaves esperadas."""
         assert "v_media" in self.resultado
         assert "v_cubica_analitica" in self.resultado
         assert "convergencia" in self.resultado
 
     def test_converge_para_analitico(self):
+        """Expansão com máximo de termos converge com <1% de erro."""
         ultimo = self.resultado["convergencia"][-1]
         assert ultimo["erro_relativo_pct"] < 1.0
 
     def test_erro_diminui_com_mais_termos(self):
+        """Erro relativo nunca aumenta com acréscimo de termos."""
         erros = [c["erro_relativo_pct"] for c in self.resultado["convergencia"]]
         assert erros[-1] <= erros[0]
 

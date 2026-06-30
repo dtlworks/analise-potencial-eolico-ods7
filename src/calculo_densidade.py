@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -8,19 +10,79 @@ from utils import RHO
 
 
 def ajustar_weibull(velocidades: np.ndarray) -> tuple:
+    """Ajusta distribuição Weibull de 2 parâmetros via MLE.
+
+    Parameters
+    ----------
+    velocidades : np.ndarray
+        Array 1D de velocidades do vento (m/s), valores > 0.
+
+    Returns
+    -------
+    tuple of (float, float)
+        k (parâmetro de forma) e c (parâmetro de escala, m/s).
+    """
     k, _, c = stats.weibull_min.fit(velocidades, floc=0)
     return k, c
 
 
 def weibull_pdf(v: np.ndarray, k: float, c: float) -> np.ndarray:
+    """Função densidade de probabilidade Weibull.
+
+    f(v) = (k/c) * (v/c)^(k-1) * exp(-(v/c)^k)
+
+    Parameters
+    ----------
+    v : np.ndarray
+        Velocidades de avaliação (m/s).
+    k : float
+        Parâmetro de forma (adimensional).
+    c : float
+        Parâmetro de escala (m/s).
+
+    Returns
+    -------
+    np.ndarray
+        Valores da PDF avaliados em v.
+    """
     return (k / c) * (v / c) ** (k - 1) * np.exp(-((v / c) ** k))
 
 
 def media_cubica_analitica(k: float, c: float) -> float:
+    """⟨v³⟩ analítico via função Gama: c³ * Gamma(1 + 3/k).
+
+    Parameters
+    ----------
+    k : float
+        Parâmetro de forma Weibull.
+    c : float
+        Parâmetro de escala Weibull (m/s).
+
+    Returns
+    -------
+    float
+        Terceiro momento bruto ⟨v³⟩ (m³/s³).
+    """
     return c ** 3 * gamma_func(1 + 3 / k)
 
 
 def media_cubica_riemann(v: np.ndarray, k: float, c: float) -> float:
+    """⟨v³⟩ por soma de Riemann (ponto médio).
+
+    Parameters
+    ----------
+    v : np.ndarray
+        Malha de velocidades (m/s).
+    k : float
+        Parâmetro de forma Weibull.
+    c : float
+        Parâmetro de escala Weibull (m/s).
+
+    Returns
+    -------
+    float
+        Aproximação de ⟨v³⟩ (m³/s³).
+    """
     v_sorted = np.sort(v)
     dv = np.diff(v_sorted)
     v_mid = (v_sorted[:-1] + v_sorted[1:]) / 2
@@ -29,6 +91,22 @@ def media_cubica_riemann(v: np.ndarray, k: float, c: float) -> float:
 
 
 def media_cubica_trapezio(v: np.ndarray, k: float, c: float) -> float:
+    """⟨v³⟩ pela regra do trapézio.
+
+    Parameters
+    ----------
+    v : np.ndarray
+        Malha de velocidades (m/s).
+    k : float
+        Parâmetro de forma Weibull.
+    c : float
+        Parâmetro de escala Weibull (m/s).
+
+    Returns
+    -------
+    float
+        Aproximação de ⟨v³⟩ (m³/s³).
+    """
     v_sorted = np.sort(v)
     dv = np.diff(v_sorted)
     pdf_left = weibull_pdf(v_sorted[:-1], k, c)
@@ -37,9 +115,33 @@ def media_cubica_trapezio(v: np.ndarray, k: float, c: float) -> float:
 
 
 def media_cubica_simpson(v: np.ndarray, k: float, c: float) -> float:
+    """⟨v³⟩ pela regra 1/3 de Simpson.
+
+    Requer número ímpar de pontos equidistantes. Se não for possível,
+    faz fallback silencioso para a regra do trapézio.
+
+    Parameters
+    ----------
+    v : np.ndarray
+        Malha de velocidades (m/s).
+    k : float
+        Parâmetro de forma Weibull.
+    c : float
+        Parâmetro de escala Weibull (m/s).
+
+    Returns
+    -------
+    float
+        Aproximação de ⟨v³⟩ (m³/s³).
+    """
     v_sorted = np.sort(v)
     n = len(v_sorted)
     if n < 3 or n % 2 == 0:
+        warnings.warn(
+            f"Simpson requer n ímpar (recebeu n={n}). Fallback para trapézio.",
+            UserWarning,
+            stacklevel=2,
+        )
         return media_cubica_trapezio(v_sorted, k, c)
 
     dv = v_sorted[1] - v_sorted[0]
@@ -51,6 +153,24 @@ def media_cubica_simpson(v: np.ndarray, k: float, c: float) -> float:
 
 
 def calcular_densidade_potencia(df: pd.DataFrame, rho: float = RHO) -> Dict:
+    """Calcula densidade de potência eólica P/A = 0.5 * rho * <v^3>.
+
+    Ajusta Weibull aos dados e computa <v^3> por 4 métodos:
+    analítico, Riemann, trapézio e Simpson.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame com coluna 'velocidade_vento'.
+    rho : float
+        Densidade do ar (kg/m³, default: 1.225).
+
+    Returns
+    -------
+    dict
+        Chaves: k_weibull, c_weibull, v_media_dados, rho,
+                media_cubica (dict), densidade_potencia (dict).
+    """
     velocidades = df["velocidade_vento"].dropna().values
     velocidades = velocidades[velocidades > 0]
 

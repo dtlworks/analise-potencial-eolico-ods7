@@ -1,11 +1,26 @@
 import numpy as np
-from scipy.special import gamma as gamma_func
 from typing import Dict, List
 
 from calculo_densidade import ajustar_weibull, weibull_pdf, media_cubica_analitica
 
 
 def coeficientes_taylor_v3(v_media: float, n_termos: int = 4) -> List[float]:
+    """Coeficientes da série de Taylor de v³ centrada em v_media.
+
+    v³ = v³ + 3v²(v-v_media) + 3v(v-v_media)² + (v-v_media)³
+
+    Parameters
+    ----------
+    v_media : float
+        Ponto de expansão (velocidade média).
+    n_termos : int
+        Número de coeficientes (default: 4, exato para cúbica).
+
+    Returns
+    -------
+    list of float
+        Coeficientes [a_0, a_1, ..., a_{n-1}].
+    """
     coeffs = [0.0] * n_termos
     coeffs[0] = v_media ** 3
     if n_termos > 1:
@@ -18,6 +33,24 @@ def coeficientes_taylor_v3(v_media: float, n_termos: int = 4) -> List[float]:
 
 
 def integrar_termos_weibull(v_media: float, k: float, c: float, n_termos: int = 4) -> List[float]:
+    """Integra cada termo (v - v_media)^n contra a PDF Weibull.
+
+    Parameters
+    ----------
+    v_media : float
+        Velocidade média (ponto de expansão).
+    k : float
+        Parâmetro de forma Weibull.
+    c : float
+        Parâmetro de escala Weibull.
+    n_termos : int
+        Número de momentos centrados a integrar.
+
+    Returns
+    -------
+    list of float
+        Momentos centrados omega_n.
+    """
     from scipy.integrate import quad
 
     resultados = []
@@ -29,6 +62,21 @@ def integrar_termos_weibull(v_media: float, k: float, c: float, n_termos: int = 
 
 
 def expansao_taylor(velocidades: np.ndarray, n_termos_max: int = 8) -> Dict:
+    """Expande <v^3> em série de Taylor e avalia convergência.
+
+    Parameters
+    ----------
+    velocidades : np.ndarray
+        Array de velocidades observadas (m/s), valores > 0.
+    n_termos_max : int
+        Número máximo de termos (default: 8).
+
+    Returns
+    -------
+    dict
+        Chaves: v_media, k_weibull, c_weibull, v_cubica_analitica,
+                coeficientes, termos_weibull, convergencia.
+    """
     k, c = ajustar_weibull(velocidades)
     v_media = np.mean(velocidades)
     v_cubica_analitica = media_cubica_analitica(k, c)

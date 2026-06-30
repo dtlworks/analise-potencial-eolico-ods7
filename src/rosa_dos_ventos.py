@@ -12,6 +12,24 @@ SETOR_NAMES = [
 
 
 def calcular_rosa(df: pd.DataFrame, n_setores: int = 16) -> Dict:
+    """Calcula estatísticas da rosa dos ventos por setor cardinal.
+
+    Agrupa direções em setores (ex: N, NNE, NE, ...) e computa
+    frequência relativa e velocidade média por setor.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame com colunas 'direcao_vento' e 'velocidade_vento'.
+    n_setores : int
+        Número de setores (default: 16, 22.5 graus cada).
+
+    Returns
+    -------
+    dict
+        Chaves: n_setores, angulo_setor, nomes, contagem,
+                frequencia_pct, velocidade_media, total_registros.
+    """
     angulo_setor = 360 / n_setores
     idx_validos = df["direcao_vento"].notna() & df["velocidade_vento"].notna()
     direcoes = df.loc[idx_validos, "direcao_vento"].values
@@ -41,6 +59,23 @@ def calcular_rosa(df: pd.DataFrame, n_setores: int = 16) -> Dict:
 
 
 def plotar_rosa(df: pd.DataFrame, salvar: str = None) -> plt.Figure:
+    """Gera gráfico polar (rosa dos ventos) com cores por intensidade.
+
+    A frequência é mostrada como barras radiais; a cor codifica
+    a velocidade média do vento em cada direção (YlOrRd).
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame com dados de direção e velocidade do vento.
+    salvar : str, optional
+        Caminho para salvar a figura. Se None, não salva.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Objeto figura do matplotlib.
+    """
     rosa = calcular_rosa(df)
     n = rosa["n_setores"]
     angulos = np.linspace(0, 2 * np.pi, n, endpoint=False)

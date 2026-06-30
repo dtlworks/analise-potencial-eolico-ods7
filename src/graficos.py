@@ -13,6 +13,20 @@ DIR_SAIDA = str(Path(__file__).resolve().parent.parent / "dados" / "processed")
 
 
 def _caminho_salvar(salvar: Optional[str]) -> Optional[str]:
+    """Resolve caminho completo para salvar figura.
+
+    Se `salvar` for apenas um nome de arquivo, prefixia com DIR_SAIDA.
+
+    Parameters
+    ----------
+    salvar : str or None
+        Nome do arquivo ou caminho completo.
+
+    Returns
+    -------
+    str or None
+        Caminho resolvido ou None.
+    """
     if salvar is None:
         return None
     if os.path.basename(salvar) == salvar:
@@ -21,6 +35,23 @@ def _caminho_salvar(salvar: Optional[str]) -> Optional[str]:
 
 
 def grafico_histograma_weibull(velocidades: np.ndarray, k: float, c: float, salvar: str = None) -> plt.Figure:
+    """Histograma normalizado das velocidades com PDF Weibull ajustada.
+
+    Parameters
+    ----------
+    velocidades : np.ndarray
+        Dados de velocidade do vento (m/s).
+    k : float
+        Parâmetro de forma Weibull.
+    c : float
+        Parâmetro de escala Weibull (m/s).
+    salvar : str, optional
+        Caminho para salvar a figura.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.hist(velocidades, bins=50, density=True, alpha=0.6, color="steelblue", edgecolor="white", label="Dados")
 
@@ -39,6 +70,19 @@ def grafico_histograma_weibull(velocidades: np.ndarray, k: float, c: float, salv
 
 
 def grafico_serie_temporal(df: pd.DataFrame, salvar: str = None) -> plt.Figure:
+    """Série temporal da velocidade do vento.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame com colunas 'data_hora' e 'velocidade_vento'.
+    salvar : str, optional
+        Caminho para salvar a figura.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
     fig, ax = plt.subplots(figsize=(12, 4))
     ax.plot(df["data_hora"], df["velocidade_vento"], lw=0.5, alpha=0.7, color="steelblue")
 
@@ -53,6 +97,19 @@ def grafico_serie_temporal(df: pd.DataFrame, salvar: str = None) -> plt.Figure:
 
 
 def grafico_convergencia_taylor(resultado_taylor: Dict, salvar: str = None) -> plt.Figure:
+    """Evolução do erro relativo da série de Taylor com mais termos.
+
+    Parameters
+    ----------
+    resultado_taylor : dict
+        Dicionário retornado por expansao_taylor().
+    salvar : str, optional
+        Caminho para salvar a figura.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
     conv = resultado_taylor["convergencia"]
     n_termos = [c["n_termos"] for c in conv]
     erros = [c["erro_relativo_pct"] for c in conv]
@@ -71,6 +128,19 @@ def grafico_convergencia_taylor(resultado_taylor: Dict, salvar: str = None) -> p
 
 
 def gerar_todos_graficos(df: pd.DataFrame, resultado_densidade: Dict, resultado_taylor: Dict, salvar: bool = False):
+    """Gera todos os gráficos da análise (4 no total).
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dados de velocidade/direção do vento.
+    resultado_densidade : dict
+        Saída de calcular_densidade_potencia().
+    resultado_taylor : dict
+        Saída de expansao_taylor().
+    salvar : bool
+        Se True, salva em dados/processed/; senão, exibe na tela.
+    """
     velocidades = df["velocidade_vento"].dropna().values
     velocidades = velocidades[velocidades > 0]
 

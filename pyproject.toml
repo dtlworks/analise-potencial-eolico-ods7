@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "analise-potencial-eolico-ods7"
+version = "1.0.0"
+description = "Estimativa da Densidade de Potência Eólica a partir de Dados do INMET"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.28",
+    "pandas>=1.5",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "python-dateutil>=2.8",
+]
+optional-dependencies = {dev = ["pytest>=8.0"]}
+
+[project.scripts]
+analise-eolica = "src.main:main"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+pythonpath = ["src"]
