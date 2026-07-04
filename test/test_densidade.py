@@ -28,7 +28,7 @@ class TestWeibull:
         k, c = 2.0, 5.0
         v = np.linspace(0.001, 30, 5000)
         pdf_vals = weibull_pdf(v, k, c)
-        integral = np.trapezoid(pdf_vals, v)
+        integral = np.trapz(pdf_vals, v)
         assert abs(integral - 1.0) < 0.01
 
     def test_media_cubica_analitica(self):
@@ -37,7 +37,7 @@ class TestWeibull:
         resultado = media_cubica_analitica(k, c)
         assert resultado > 0
         v = np.linspace(0.001, 30, 5000)
-        numerico = np.trapezoid(v ** 3 * weibull_pdf(v, k, c), v)
+        numerico = np.trapz(v ** 3 * weibull_pdf(v, k, c), v)
         assert abs(resultado - numerico) / numerico < 0.01
 
 

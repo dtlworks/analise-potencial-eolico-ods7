@@ -52,8 +52,7 @@ class TestGraficoHistogramaWeibull:
 
     def test_com_salvar_string(self):
         """Salvar com nome simples não levanta erro."""
-        fig = grafico_histograma_weibull(self.velocidades, self.k, self.c, salvar="test_hist.png")
-        fig.savefig(DIR_SAIDA + "/test_hist.png")
+        grafico_histograma_weibull(self.velocidades, self.k, self.c, salvar="test_hist.png")
 
 
 class TestGraficoSerieTemporal:
