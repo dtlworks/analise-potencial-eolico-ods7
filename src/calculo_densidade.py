@@ -176,7 +176,7 @@ def calcular_densidade_potencia(df: pd.DataFrame, rho: float = RHO) -> Dict:
 
     k, c = ajustar_weibull(velocidades)
 
-    v_range = np.linspace(0, velocidades.max() * 1.5, 1000)
+    v_range = np.linspace(0, velocidades.max() * 1.5, 1001)
 
     cubica_riemann = media_cubica_riemann(v_range, k, c)
     cubica_trapezio = media_cubica_trapezio(v_range, k, c)
